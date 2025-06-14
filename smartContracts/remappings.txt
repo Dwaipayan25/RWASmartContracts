@@ -1,0 +1,6 @@
+forge-std/=lib/forge-std/src/
+@chainlink/contracts/=lib/foundry-chainlink-toolkit/lib/chainlink-brownie-contracts/contracts/src/
+@openzeppelin/contracts/=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/
+@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
+@chainlink-ccip/=lib/chainlink-brownie-contracts/contracts/src/v0.8/ccip
+@chainlink-contracts/=lib/chainlink-brownie-contracts/contracts/src/v0.8/

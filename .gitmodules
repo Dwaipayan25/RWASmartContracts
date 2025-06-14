@@ -1,0 +1,18 @@
+[submodule "smartContracts/lib/foundry-chainlink-toolkit"]
+	path = smartContracts/lib/foundry-chainlink-toolkit
+	url = https://github.com/smartcontractkit/foundry-chainlink-toolkit
+[submodule "smartContracts/lib/openzeppelin-foundry-upgrades"]
+	path = smartContracts/lib/openzeppelin-foundry-upgrades
+	url = https://github.com/OpenZeppelin/openzeppelin-foundry-upgrades
+[submodule "smartContracts/lib/openzeppelin-contracts-upgradeable"]
+	path = smartContracts/lib/openzeppelin-contracts-upgradeable
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
+[submodule "smartContracts/lib/chainlink-ccip"]
+	path = smartContracts/lib/chainlink-ccip
+	url = https://github.com/smartcontractkit/chainlink-ccip
+[submodule "smartContracts/lib/chainlink-local"]
+	path = smartContracts/lib/chainlink-local
+	url = https://github.com/smartcontractkit/chainlink-local
+[submodule "smartContracts/lib/chainlink-brownie-contracts"]
+	path = smartContracts/lib/chainlink-brownie-contracts
+	url = https://github.com/smartcontractkit/chainlink-brownie-contracts

@@ -69,37 +69,45 @@ contract RWAVault {
     }
 
     function calculateRequiredRWAs(
-        uint256 vaultId, 
-        uint256 baseAmount
-    ) public view returns (address[] memory, uint256[] memory) {
-        require(vaultId < vaults.length, "Invalid vault ID");
-        VaultConfig storage vault = vaults[vaultId];
+    uint256 vaultId, 
+    uint256 baseAmount
+) public view returns (address[] memory, uint256[] memory) {
+    require(vaultId < vaults.length, "Invalid vault ID");
+    VaultConfig storage vault = vaults[vaultId];
+    
+    uint256[] memory amounts = new uint256[](vault.rwaAssets.length);
+    
+    for (uint i = 0; i < vault.rwaAssets.length; i++) {
+        // Calculate base currency value for this asset
+        uint256 assetValue = (baseAmount * vault.percentages[i]) / 10000;
         
-        uint256[] memory amounts = new uint256[](vault.rwaAssets.length);
+        // Get price from Chainlink (base currency per RWA token)
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(vault.priceFeeds[i]);
+        (, int256 price,,,) = priceFeed.latestRoundData();
+        uint8 feedDecimals = priceFeed.decimals();
         
-        for (uint i = 0; i < vault.rwaAssets.length; i++) {
-            // Calculate base currency value for this asset
-            uint256 assetValue = (baseAmount * vault.percentages[i]) / 10000;
-            
-            // Get price from Chainlink (base currency per RWA token)
-            AggregatorV3Interface priceFeed = AggregatorV3Interface(vault.priceFeeds[i]);
-            (, int256 price,,,) = priceFeed.latestRoundData();
-            uint8 feedDecimals = priceFeed.decimals();
-            
-            // Convert price to base currency decimals
-            uint256 priceInBase = uint256(price) * 
-                (10 ** (vault.baseCurrencyDecimals - feedDecimals));
-            
-            // Get RWA token decimals
-            IERC20Decimals rwaToken = IERC20Decimals(vault.rwaAssets[i]);
-            uint8 rwaDecimals = rwaToken.decimals();
-            
-            // Calculate required RWA amount: (assetValue * 10^rwaDecimals) / priceInBase
-            amounts[i] = (assetValue * (10 ** rwaDecimals)) / priceInBase;
+        // Get RWA token decimals
+        IERC20Decimals rwaToken = IERC20Decimals(vault.rwaAssets[i]);
+        uint8 rwaDecimals = rwaToken.decimals();
+        
+        // Convert price to match calculation precision
+        uint256 priceInBase;
+        if (feedDecimals >= vault.baseCurrencyDecimals) {
+            // Feed has more or equal decimals than base currency
+            priceInBase = uint256(price) / (10 ** (feedDecimals - vault.baseCurrencyDecimals));
+        } else {
+            // Feed has fewer decimals than base currency
+            priceInBase = uint256(price) * (10 ** (vault.baseCurrencyDecimals - feedDecimals));
         }
         
-        return (vault.rwaAssets, amounts);
+        // Calculate required RWA amount: (assetValue * 10^rwaDecimals) / priceInBase
+        if (priceInBase > 0) {
+            amounts[i] = (assetValue * (10 ** rwaDecimals)) / priceInBase;
+        }
     }
+    
+    return (vault.rwaAssets, amounts);
+}
 
     function deposit(uint256 vaultId, uint256 baseAmount) external {
         require(vaultId < vaults.length, "Invalid vault ID");

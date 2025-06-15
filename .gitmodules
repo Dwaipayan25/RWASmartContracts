@@ -16,3 +16,6 @@
 [submodule "smartContracts/lib/chainlink-brownie-contracts"]
 	path = smartContracts/lib/chainlink-brownie-contracts
 	url = https://github.com/smartcontractkit/chainlink-brownie-contracts
+[submodule "RWAXTFSmartContracts/lib/forge-std"]
+	path = RWAXTFSmartContracts/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std

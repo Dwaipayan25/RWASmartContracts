@@ -37,6 +37,19 @@ contract RWAETFVault is AccessControl, ReentrancyGuard {
     Asset[] public assets;
     mapping(address => uint256) public assetIndexes; // 1-based index
     
+    // Fractional ownership tracking
+    struct VaultFraction {
+        uint256 fractionId;
+        uint256 sharePercentage; // e.g., 100 = 1% of vault
+        address owner;
+        bool isActive;
+    }
+    
+    mapping(uint256 => VaultFraction) public vaultFractions;
+    mapping(address => string) private assetNames; // Asset name mapping
+    uint256 public totalFractions = 100; // 100 squares = 100% of vault
+    uint256 public nextFractionId = 1;
+    
     // Fee settings
     uint256 public managementFeeBps = 50; // 0.5% annual
     uint256 public redemptionFeeBps = 25;  // 0.25%
@@ -50,11 +63,21 @@ contract RWAETFVault is AccessControl, ReentrancyGuard {
     // Events
     event Deposit(address indexed user, address[] tokens, uint256[] amounts, uint256 etfMinted);
     event Redemption(address indexed user, uint256 etfBurned, address[] tokens, uint256[] amounts);
-    event AssetAdded(address indexed token, uint256 targetWeight);
+    event AssetAdded(address indexed token, uint256 targetWeight, string name);
     event AssetUpdated(address indexed token, uint256 targetWeight, uint256 minWeight, uint256 maxWeight);
     event AssetRemoved(address indexed token);
     event Rebalanced(address indexed executor);
     event FeesCollected(uint256 etfAmount);
+    event FractionalOwnershipPurchased(
+        address indexed buyer, 
+        uint256 numberOfSquares, 
+        uint256 etfAmount
+    );
+    event FractionalOwnershipRedeemed(
+        address indexed user,
+        uint256 numberOfSquares,
+        uint256 etfBurned
+    );
     
     /**
      * @dev Constructor
@@ -83,13 +106,15 @@ contract RWAETFVault is AccessControl, ReentrancyGuard {
         address token, 
         uint256 targetWeight, 
         uint256 minWeight, 
-        uint256 maxWeight
+        uint256 maxWeight,
+        string memory assetName
     ) external onlyRole(GOVERNANCE_ROLE) {
         require(token != address(0), "Invalid token address");
         require(assetIndexes[token] == 0, "Asset already exists");
         require(targetWeight > 0 && targetWeight <= BASIS_POINTS, "Invalid target weight");
         require(minWeight <= targetWeight && targetWeight <= maxWeight, "Invalid weight range");
         require(priceOracle.hasActivePriceFeed(token), "No price feed for token");
+        require(bytes(assetName).length > 0, "Asset name required");
         
         // Calculate total weight to ensure we don't exceed 100%
         uint256 totalWeight = targetWeight;
@@ -111,8 +136,9 @@ contract RWAETFVault is AccessControl, ReentrancyGuard {
         
         // Store the index (1-based to distinguish from non-existent assets)
         assetIndexes[token] = assets.length;
+        assetNames[token] = assetName;
         
-        emit AssetAdded(token, targetWeight);
+        emit AssetAdded(token, targetWeight, assetName);
     }
     
     /**
@@ -264,6 +290,162 @@ contract RWAETFVault is AccessControl, ReentrancyGuard {
         }
         
         emit Redemption(msg.sender, etfAmount, tokens, amounts);
+    }
+    
+    /**
+     * @dev Buy specific vault fractions (squares)
+     */
+    function buyVaultFractions(
+        uint256 numberOfSquares,
+        address[] calldata rwaTokens,
+        uint256[] calldata amounts
+    ) external nonReentrant {
+        require(numberOfSquares > 0, "Must buy at least 1 square");
+        require(numberOfSquares <= getAvailableFractions(), "Not enough squares available");
+        
+        // Calculate total deposit value
+        uint256 totalDepositValue = 0;
+        for (uint256 i = 0; i < rwaTokens.length; i++) {
+            // Validate RWA token is supported
+            require(assetIndexes[rwaTokens[i]] > 0, "RWA token not supported");
+            
+            // Transfer RWA tokens to vault
+            IERC20(rwaTokens[i]).safeTransferFrom(msg.sender, address(this), amounts[i]);
+            
+            // Calculate USD value
+            uint256 tokenValue = priceOracle.getAssetValueInUSD(rwaTokens[i], amounts[i]);
+            totalDepositValue += tokenValue;
+        }
+        
+        // Calculate required value per square
+        uint256 vaultTotalValue = getTotalVaultValue();
+        uint256 valuePerSquare = vaultTotalValue / totalFractions;
+        uint256 requiredValue = valuePerSquare * numberOfSquares;
+        
+        require(totalDepositValue >= requiredValue, "Insufficient deposit value");
+        
+        // Mint ETF tokens representing the squares
+        uint256 etfPerSquare = etfToken.totalSupply() / totalFractions;
+        uint256 etfToMint = etfPerSquare * numberOfSquares;
+        
+        // Allocate squares to user
+        for (uint256 i = 0; i < numberOfSquares; i++) {
+            vaultFractions[nextFractionId] = VaultFraction({
+                fractionId: nextFractionId,
+                sharePercentage: 100, // Each square = 1%
+                owner: msg.sender,
+                isActive: true
+            });
+            nextFractionId++;
+        }
+        
+        etfToken.mint(msg.sender, etfToMint);
+        
+        emit FractionalOwnershipPurchased(msg.sender, numberOfSquares, etfToMint);
+    }
+    
+    /**
+     * @dev Redeem specific squares back to RWA tokens
+     */
+    function redeemSquares(uint256 numberOfSquares) external nonReentrant {
+        uint256 userSquares = getUserTotalSquares(msg.sender);
+        require(numberOfSquares <= userSquares, "Insufficient squares");
+        
+        uint256 etfPerSquare = etfToken.totalSupply() / totalFractions;
+        uint256 etfToBurn = etfPerSquare * numberOfSquares;
+        
+        // Burn ETF tokens
+        etfToken.burn(msg.sender, etfToBurn);
+        
+        // Transfer proportional RWA assets
+        uint256 redeemRatio = (numberOfSquares * 1e18) / totalFractions;
+        
+        // Prepare arrays for event
+        address[] memory tokens = new address[](assets.length);
+        uint256[] memory amounts = new uint256[](assets.length);
+        
+        // Transfer proportional assets to user
+        uint256 activeAssetCount = 0;
+        for (uint256 i = 0; i < assets.length; i++) {
+            if (assets[i].isActive) {
+                address tokenAddr = assets[i].tokenAddress;
+                uint256 vaultBalance = IERC20(tokenAddr).balanceOf(address(this));
+                uint256 userAmount = (vaultBalance * redeemRatio) / 1e18;
+                
+                if (userAmount > 0) {
+                    IERC20(tokenAddr).safeTransfer(msg.sender, userAmount);
+                    tokens[activeAssetCount] = tokenAddr;
+                    amounts[activeAssetCount] = userAmount;
+                    activeAssetCount++;
+                }
+            }
+        }
+        
+        // Mark squares as redeemed
+        uint256 squaresRedeemed = 0;
+        for (uint256 i = 1; i < nextFractionId && squaresRedeemed < numberOfSquares; i++) {
+            if (vaultFractions[i].owner == msg.sender && vaultFractions[i].isActive) {
+                vaultFractions[i].isActive = false;
+                squaresRedeemed++;
+            }
+        }
+        
+        emit FractionalOwnershipRedeemed(msg.sender, numberOfSquares, etfToBurn);
+    }
+    
+    /**
+     * @dev Get vault composition for dashboard
+     */
+    function getVaultComposition() external view returns (
+        string[] memory assetNames_,
+        uint256[] memory percentages,
+        uint256[] memory values,
+        address[] memory tokenAddresses
+    ) {
+        uint256 activeCount = 0;
+        for (uint256 i = 0; i < assets.length; i++) {
+            if (assets[i].isActive) activeCount++;
+        }
+        
+        assetNames_ = new string[](activeCount);
+        percentages = new uint256[](activeCount);
+        values = new uint256[](activeCount);
+        tokenAddresses = new address[](activeCount);
+        
+        uint256 totalValue = getTotalVaultValue();
+        uint256 index = 0;
+        
+        for (uint256 i = 0; i < assets.length; i++) {
+            if (assets[i].isActive) {
+                address token = assets[i].tokenAddress;
+                uint256 balance = IERC20(token).balanceOf(address(this));
+                uint256 assetValue = priceOracle.getAssetValueInUSD(token, balance);
+                
+                assetNames_[index] = getAssetName(token);
+                percentages[index] = totalValue > 0 ? (assetValue * 10000) / totalValue : 0; // basis points
+                values[index] = assetValue;
+                tokenAddresses[index] = token;
+                index++;
+            }
+        }
+    }
+    
+    /**
+     * @dev Get grid representation (100 squares)
+     */
+    function getVaultGrid() external view returns (uint256[100] memory grid) {
+        // Fill grid based on asset percentages
+        // Each square represents 1% of the vault
+        (,uint256[] memory percentages,,) = this.getVaultComposition();
+        
+        uint256 squareIndex = 0;
+        for (uint256 i = 0; i < percentages.length; i++) {
+            uint256 squares = percentages[i] / 100; // Convert basis points to squares
+            for (uint256 j = 0; j < squares && squareIndex < 100; j++) {
+                grid[squareIndex] = i + 1; // Asset ID (1-based)
+                squareIndex++;
+            }
+        }
     }
     
     /**
@@ -536,5 +718,60 @@ contract RWAETFVault is AccessControl, ReentrancyGuard {
      */
     function setCrossChainManager(address manager) external onlyRole(DEFAULT_ADMIN_ROLE) {
         grantRole(CROSS_CHAIN_ROLE, manager);
+    }
+    
+    /**
+     * @dev Get asset name
+     */
+    function getAssetName(address token) public view returns (string memory) {
+        return assetNames[token];
+    }
+    
+    /**
+     * @dev Get available fractions for purchase
+     */
+    function getAvailableFractions() public view returns (uint256) {
+        uint256 allocated = 0;
+        for (uint256 i = 1; i < nextFractionId; i++) {
+            if (vaultFractions[i].isActive) {
+                allocated++;
+            }
+        }
+        return totalFractions - allocated;
+    }
+    
+    /**
+     * @dev Get user's total squares
+     */
+    function getUserTotalSquares(address user) public view returns (uint256) {
+        uint256 userSquares = 0;
+        for (uint256 i = 1; i < nextFractionId; i++) {
+            if (vaultFractions[i].owner == user && vaultFractions[i].isActive) {
+                userSquares++;
+            }
+        }
+        return userSquares;
+    }
+    
+    /**
+     * @dev Get user's ownership in the vault
+     */
+    function getUserOwnership(address user) external view returns (
+        uint256 totalSquares,
+        uint256 etfBalance,
+        uint256 ownershipPercentage,
+        uint256 usdValue
+    ) {
+        etfBalance = etfToken.balanceOf(user);
+        uint256 totalSupply = etfToken.totalSupply();
+        
+        if (totalSupply > 0) {
+            ownershipPercentage = (etfBalance * 10000) / totalSupply; // basis points
+            totalSquares = (ownershipPercentage * 100) / 10000; // Convert to squares
+            usdValue = (getTotalVaultValue() * etfBalance) / totalSupply;
+        }
+        
+        // Also count direct square ownership
+        totalSquares += getUserTotalSquares(user);
     }
 }

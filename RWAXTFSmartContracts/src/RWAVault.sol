@@ -235,4 +235,146 @@ contract RWAVault {
         
         return (token.balanceOf(owner) * 10000) / totalSupply;
     }
+
+// ================== VIEW FUNCTIONS ==================
+
+function getAllVaults() external view returns (
+    uint256[] memory vaultIds,
+    address[] memory vaultTokens,
+    address[][] memory rwaAssets,
+    uint256[][] memory percentages,
+    address[] memory baseCurrencies,
+    uint256[] memory baseCurrencyDecimals,
+    uint256[] memory totalSupplies
+) {
+    uint256 vaultCount = vaults.length;
+    
+    // Initialize return arrays
+    vaultIds = new uint256[](vaultCount);
+    vaultTokens = new address[](vaultCount);
+    rwaAssets = new address[][](vaultCount);
+    percentages = new uint256[][](vaultCount);
+    baseCurrencies = new address[](vaultCount);
+    baseCurrencyDecimals = new uint256[](vaultCount);
+    totalSupplies = new uint256[](vaultCount);
+    
+    for (uint256 i = 0; i < vaultCount; i++) {
+        VaultConfig storage vault = vaults[i];
+        VaultToken token = VaultToken(vault.vaultToken);
+        
+        vaultIds[i] = i;
+        vaultTokens[i] = vault.vaultToken;
+        rwaAssets[i] = vault.rwaAssets;
+        percentages[i] = vault.percentages;
+        baseCurrencies[i] = vault.baseCurrency;
+        baseCurrencyDecimals[i] = vault.baseCurrencyDecimals;
+        totalSupplies[i] = token.totalSupply();
+    }
+    
+    return (
+        vaultIds,
+        vaultTokens,
+        rwaAssets,
+        percentages,
+        baseCurrencies,
+        baseCurrencyDecimals,
+        totalSupplies
+    );
+}
+
+function getVaultCount() external view returns (uint256) {
+    return vaults.length;
+}
+
+// Enhanced function with vault metadata for better frontend display
+function getAllVaultsWithMetadata() external view returns (
+    uint256[] memory vaultIds,
+    string[] memory tokenNames,
+    string[] memory tokenSymbols,
+    address[] memory vaultTokens,
+    address[][] memory rwaAssets,
+    uint256[][] memory percentages,
+    address[] memory baseCurrencies,
+    uint256[] memory totalSupplies,
+    uint256[] memory totalValueLocked // in base currency
+) {
+    uint256 vaultCount = vaults.length;
+    
+    // Initialize return arrays
+    vaultIds = new uint256[](vaultCount);
+    tokenNames = new string[](vaultCount);
+    tokenSymbols = new string[](vaultCount);
+    vaultTokens = new address[](vaultCount);
+    rwaAssets = new address[][](vaultCount);
+    percentages = new uint256[][](vaultCount);
+    baseCurrencies = new address[](vaultCount);
+    totalSupplies = new uint256[](vaultCount);
+    totalValueLocked = new uint256[](vaultCount);
+    
+    for (uint256 i = 0; i < vaultCount; i++) {
+        VaultConfig storage vault = vaults[i];
+        VaultToken token = VaultToken(vault.vaultToken);
+        
+        vaultIds[i] = i;
+        tokenNames[i] = token.name();
+        tokenSymbols[i] = token.symbol();
+        vaultTokens[i] = vault.vaultToken;
+        rwaAssets[i] = vault.rwaAssets;
+        percentages[i] = vault.percentages;
+        baseCurrencies[i] = vault.baseCurrency;
+        totalSupplies[i] = token.totalSupply();
+        
+        // Calculate TVL (Total Value Locked) in base currency
+        totalValueLocked[i] = _calculateVaultTVL(i);
+    }
+    
+    return (
+        vaultIds,
+        tokenNames,
+        tokenSymbols,
+        vaultTokens,
+        rwaAssets,
+        percentages,
+        baseCurrencies,
+        totalSupplies,
+        totalValueLocked
+    );
+}
+
+// Internal helper function to calculate vault TVL
+function _calculateVaultTVL(uint256 vaultId) internal view returns (uint256) {
+    VaultConfig storage vault = vaults[vaultId];
+    uint256 tvl = vaultBalances[vaultId][vault.baseCurrency];
+    
+    // Add value of all RWA assets converted to base currency
+    for (uint256 i = 0; i < vault.rwaAssets.length; i++) {
+        uint256 assetBalance = vaultBalances[vaultId][vault.rwaAssets[i]];
+        if (assetBalance > 0) {
+            // Get current price
+            AggregatorV3Interface priceFeed = AggregatorV3Interface(vault.priceFeeds[i]);
+            (, int256 price,,,) = priceFeed.latestRoundData();
+            uint8 feedDecimals = priceFeed.decimals();
+            
+            if (price > 0) {
+                // Convert to base currency value
+                uint256 priceInBase;
+                if (feedDecimals >= vault.baseCurrencyDecimals) {
+                    priceInBase = uint256(price) / (10 ** (feedDecimals - vault.baseCurrencyDecimals));
+                } else {
+                    priceInBase = uint256(price) * (10 ** (vault.baseCurrencyDecimals - feedDecimals));
+                }
+                
+                // Get asset decimals and convert balance to base currency
+                IERC20Decimals rwaToken = IERC20Decimals(vault.rwaAssets[i]);
+                uint8 assetDecimals = rwaToken.decimals();
+                
+                uint256 assetValueInBase = (assetBalance * priceInBase) / (10 ** assetDecimals);
+                tvl += assetValueInBase;
+            }
+        }
+    }
+    
+    return tvl;
+}
+
 }

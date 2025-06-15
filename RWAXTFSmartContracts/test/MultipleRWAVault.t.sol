@@ -152,13 +152,13 @@ contract RWAVaultMultiUserTest is Test {
         usdc.approve(address(vault), 300e6);
         rwa1.approve(address(vault), 300e18);
         rwa2.approve(address(vault), 300e18);
-        vault.deposit(vaultId, 100e6);
+        vault.deposit(vaultId, 300e6);
         vm.stopPrank();
 
         // Check vault token balances
         assertEq(vaultToken.balanceOf(user1), 100e6);
         assertEq(vaultToken.balanceOf(user2), 200e6);
-        assertEq(vaultToken.balanceOf(user3), 100e6);
+        assertEq(vaultToken.balanceOf(user3), 300e6);
 
         // Check ownership percentages
         uint256 pct1 = vault.getOwnershipPercentage(vaultId, user1);

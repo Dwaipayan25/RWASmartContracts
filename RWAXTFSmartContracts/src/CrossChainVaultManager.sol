@@ -24,7 +24,7 @@ contract SimplifiedCrossChainManager is CCIPReceiver, OwnerIsCreator {
 
     // Core contracts (only on vault chain)
     RWAVault public vault; // Not immutable since it might be zero on non-vault chains
-    IRouterClient private immutable router;
+    IRouterClient public immutable router;
     
     // Chain configuration
     mapping(uint64 => bool) public allowlistedChains;
@@ -537,6 +537,7 @@ contract SimplifiedCrossChainManager is CCIPReceiver, OwnerIsCreator {
     function getUserVaultBalance(uint256 vaultId, address user) external view returns (uint256) {
         return userVaultShares[vaultId][user];
     }
+    
 
     function getTotalVaultShares(uint256 vaultId) external view returns (uint256 total) {
         // Note: This only returns shares tracked on this chain
@@ -592,4 +593,9 @@ contract SimplifiedCrossChainManager is CCIPReceiver, OwnerIsCreator {
     }
     
     receive() external payable {}
+
+    // Add this function to the contract for testing
+    function ccipReceiveForTesting(Client.Any2EVMMessage memory any2EvmMessage) external {
+        _ccipReceive(any2EvmMessage);
+    }
 }

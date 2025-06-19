@@ -36,16 +36,24 @@ contract SimplifiedCrossChainManager is CCIPReceiver, OwnerIsCreator {
     
     // Track which chain hosts each vault
     mapping(uint256 => uint64) public vaultChains;
+    mapping(uint256 => address) public vaultCreators;
     uint64 public immutable thisChain;
     bool public immutable isVaultChain;
     
     // Message tracking
     mapping(bytes32 => bool) public processedMessages;
+
+    // Add these state variables after other mappings
+    uint256[] public allVaultIds;                    // Array of all registered vault IDs
+    mapping(uint64 => uint256[]) public chainVaults; // Mapping of chain selector to vault IDs on that chain
+    mapping(uint256 => uint256) private vaultIdToIndex; // For O(1) existence check and removal
     
     // Gas limits
     uint256 public constant GAS_LIMIT_DEPOSIT = 500_000;
     uint256 public constant GAS_LIMIT_REDEEM = 800_000;
     uint256 public constant GAS_LIMIT_SEND_TOKENS = 200_000;
+
+    
 
     event CrossChainDepositInitiated(
         bytes32 indexed messageId,
@@ -90,6 +98,9 @@ contract SimplifiedCrossChainManager is CCIPReceiver, OwnerIsCreator {
         uint64 destinationChain
     );
 
+    event VaultRegistered(uint256 indexed vaultId, uint64 indexed chainSelector, address indexed registrar);
+
+
     constructor(
         address _router,
         address _vault, // Will be address(0) on non-vault chains
@@ -127,9 +138,51 @@ contract SimplifiedCrossChainManager is CCIPReceiver, OwnerIsCreator {
         allowlistedTokens[_token] = _allowed;
     }
 
-    function setVaultChain(uint256 _vaultId, uint64 _chainSelector) external onlyOwner {
-        vaultChains[_vaultId] = _chainSelector;
+    function setVaultChain(uint256 _vaultId, uint64 _chainSelector) external {
+    require(_chainSelector != 0, "Invalid chain selector");
+    // require(allowlistedChains[_chainSelector], "Chain not allowlisted");
+    
+    // Check if this vault was previously registered on a different chain
+    uint64 previousChain = vaultChains[_vaultId];
+    if (previousChain != 0 && previousChain != _chainSelector) {
+        // Remove from previous chain's array
+        _removeVaultFromChain(previousChain, _vaultId);
     }
+    
+    // Set the chain selector for this vault
+    vaultChains[_vaultId] = _chainSelector;
+    
+    // Add to chain's vault array if not already there
+    if (previousChain != _chainSelector) {
+        chainVaults[_chainSelector].push(_vaultId);
+    }
+    
+    // Add to global vault list if new
+    if (previousChain == 0) {
+        vaultIdToIndex[_vaultId] = allVaultIds.length;
+        allVaultIds.push(_vaultId);
+    }
+    
+    // Track the vault registrar for permission management
+    if (vaultCreators[_vaultId] == address(0)) {
+        vaultCreators[_vaultId] = msg.sender;
+    }
+    
+    emit VaultRegistered(_vaultId, _chainSelector, msg.sender);
+}
+
+// Helper function to remove a vault from a chain's array
+function _removeVaultFromChain(uint64 _chainSelector, uint256 _vaultId) internal {
+    uint256[] storage vaults = chainVaults[_chainSelector];
+    for (uint i = 0; i < vaults.length; i++) {
+        if (vaults[i] == _vaultId) {
+            // Replace with the last element and pop
+            vaults[i] = vaults[vaults.length - 1];
+            vaults.pop();
+            break;
+        }
+    }
+}
 
     // ============ CROSS-CHAIN DEPOSIT ============
     
@@ -138,12 +191,12 @@ contract SimplifiedCrossChainManager is CCIPReceiver, OwnerIsCreator {
         uint256 baseAmount,
         address baseToken
     ) external payable {
-        require(allowlistedTokens[baseToken], "Token not allowlisted");
+        // require(allowlistedTokens[baseToken], "Token not allowlisted");
         require(baseAmount > 0, "Amount must be positive");
         
         uint64 vaultChain = vaultChains[vaultId];
         require(vaultChain != 0, "Vault chain not set");
-        require(allowlistedChains[vaultChain], "Vault chain not allowlisted");
+        // require(allowlistedChains[vaultChain], "Vault chain not allowlisted");
 
         if (vaultChain == thisChain) {
             // Direct deposit on same chain
@@ -194,7 +247,7 @@ contract SimplifiedCrossChainManager is CCIPReceiver, OwnerIsCreator {
         
         uint64 vaultChain = vaultChains[vaultId];
         require(vaultChain != 0, "Vault chain not set");
-        require(allowlistedChains[vaultChain], "Vault chain not allowlisted");
+        // require(allowlistedChains[vaultChain], "Vault chain not allowlisted");
 
         // Deduct shares from user's balance
         userVaultShares[vaultId][msg.sender] -= shares;
@@ -598,4 +651,349 @@ contract SimplifiedCrossChainManager is CCIPReceiver, OwnerIsCreator {
     function ccipReceiveForTesting(Client.Any2EVMMessage memory any2EvmMessage) external {
         _ccipReceive(any2EvmMessage);
     }
+
+    // Add these functions to the VIEW FUNCTIONS section
+
+/// @notice Get all registered vault IDs
+/// @return Array of all vault IDs that have been registered
+function getAllVaultIds() external view returns (uint256[] memory) {
+    return allVaultIds;
+}
+
+/// @notice Get the total number of registered vaults
+/// @return The count of registered vaults
+function getVaultCount() external view returns (uint256) {
+    return allVaultIds.length;
+}
+
+/// @notice Get all vault IDs registered on a specific chain
+/// @param _chainSelector The chain selector to query
+/// @return Array of vault IDs registered on the specified chain
+function getVaultsByChain(uint64 _chainSelector) external view returns (uint256[] memory) {
+    return chainVaults[_chainSelector];
+}
+
+/// @notice Get a paginated list of all vault IDs (useful for UIs with many vaults)
+/// @param _start The starting index
+/// @param _limit Maximum number of entries to return
+/// @return Array of vault IDs within the specified range
+function getPaginatedVaultIds(uint256 _start, uint256 _limit) external view returns (uint256[] memory) {
+    if (_start >= allVaultIds.length) {
+        return new uint256[](0);
+    }
+    
+    uint256 end = _start + _limit;
+    if (end > allVaultIds.length) {
+        end = allVaultIds.length;
+    }
+    
+    uint256[] memory result = new uint256[](end - _start);
+    for (uint256 i = _start; i < end; i++) {
+        result[i - _start] = allVaultIds[i];
+    }
+    
+    return result;
+}
+
+/// @notice Get comprehensive information about a specific vault
+/// @param _vaultId The vault ID to query
+/// @return chainSelector The chain where this vault is registered
+/// @return creator Address that registered this vault
+/// @return isActive Whether this vault is on an allowlisted chain
+/// @return totalUserShares Total shares tracked on this chain
+function getVaultInfo(uint256 _vaultId) external view returns (
+    uint64 chainSelector,
+    address creator, 
+    bool isActive,
+    uint256 totalUserShares
+) {
+    chainSelector = vaultChains[_vaultId];
+    creator = vaultCreators[_vaultId];
+    // isActive = allowlistedChains[chainSelector];
+    
+    // For total shares, we need to sum all user shares for this vault on this chain
+    // This is a simplified approach and could be optimized with a dedicated counter
+    totalUserShares = 0;
+    
+    // Return details based on what's available on this chain
+    if (isVaultChain && chainSelector == thisChain) {
+        // We're on the vault chain for this vault - get data from the actual vault
+        (address vaultToken, , , , ) = vault.getVaultDetails(_vaultId);
+        totalUserShares = IERC20(vaultToken).totalSupply();
+    }
+    
+    return (chainSelector, creator, isActive, totalUserShares);
+}
+
+/// @notice Get detailed information about multiple vaults at once
+/// @param _vaultIds Array of vault IDs to query
+/// @return chainSelectors The chains where these vaults are registered
+/// @return creators Addresses that registered these vaults
+/// @return isActives Whether these vaults are on allowlisted chains
+/// @return totalShares Total shares for each vault tracked on this chain
+function getBatchVaultInfo(uint256[] calldata _vaultIds) external view 
+    returns (
+        uint64[] memory chainSelectors, 
+        address[] memory creators, 
+        bool[] memory isActives,
+        uint256[] memory totalShares
+    ) 
+{
+    uint256 length = _vaultIds.length;
+    chainSelectors = new uint64[](length);
+    creators = new address[](length);
+    isActives = new bool[](length);
+    totalShares = new uint256[](length);
+    
+    for (uint256 i = 0; i < length; i++) {
+        uint256 vaultId = _vaultIds[i];
+        chainSelectors[i] = vaultChains[vaultId];
+        creators[i] = vaultCreators[vaultId];
+        // isActives[i] = allowlistedChains[chainSelectors[i]];
+        
+        // Get total shares similar to the single vault case
+        if (isVaultChain && chainSelectors[i] == thisChain) {
+            (address vaultToken, , , , ) = vault.getVaultDetails(vaultId);
+            totalShares[i] = IERC20(vaultToken).totalSupply();
+        }
+    }
+    
+    return (chainSelectors, creators, isActives, totalShares);
+}
+
+
+function getLocalVaultDetails() external view returns (
+    uint256[] memory vaultIds,
+    uint64[] memory chainSelectors,
+    address[] memory creators,
+    uint256[] memory totalShares,
+    uint256[] memory tvls  // TVL only available for vaults on this chain
+) {
+    // Get vaults on this chain
+    uint256[] memory localVaults = chainVaults[thisChain];
+    uint256 count = localVaults.length;
+    
+    vaultIds = new uint256[](count);
+    chainSelectors = new uint64[](count);
+    creators = new address[](count);
+    totalShares = new uint256[](count);
+    tvls = new uint256[](count);
+    
+    for (uint256 i = 0; i < count; i++) {
+        uint256 vaultId = localVaults[i];
+        vaultIds[i] = vaultId;
+        chainSelectors[i] = thisChain;
+        creators[i] = vaultCreators[vaultId];
+        
+        // Additional vault-specific details if this is the vault chain
+        if (isVaultChain) {
+            (address vaultToken, , , , ) = vault.getVaultDetails(vaultId);
+            totalShares[i] = IERC20(vaultToken).totalSupply();
+            
+            // Calculate TVL if we're on the vault chain and have access to the vault
+            // This leverages the vault's internal TVL calculation function
+            tvls[i] = vault._calculateVaultTVL(vaultId);
+        }
+    }
+    
+    return (vaultIds, chainSelectors, creators, totalShares, tvls);
+}
+
+
+/// @notice Get user balances across multiple vaults
+/// @param _user The user address to query
+/// @param _vaultIds Array of vault IDs to check
+/// @return balances Array of the user's balances for each vault
+function getUserVaultBalances(address _user, uint256[] calldata _vaultIds) external view returns (uint256[] memory balances) {
+    uint256 length = _vaultIds.length;
+    balances = new uint256[](length);
+    
+    for (uint256 i = 0; i < length; i++) {
+        balances[i] = userVaultShares[_vaultIds[i]][_user];
+    }
+    
+    return balances;
+}
+
+/// @notice Get all vaults where a user has shares
+/// @param _user The user address to query
+/// @return userVaultIds Array of vault IDs where the user has shares
+/// @return userBalances Array of the user's corresponding balances
+function getUserVaults(address _user) external view returns (
+    uint256[] memory userVaultIds,
+    uint256[] memory userBalances
+) {
+    // First, count how many vaults the user has shares in
+    uint256 userVaultCount = 0;
+    for (uint256 i = 0; i < allVaultIds.length; i++) {
+        if (userVaultShares[allVaultIds[i]][_user] > 0) {
+            userVaultCount++;
+        }
+    }
+    
+    // Then populate the result arrays
+    userVaultIds = new uint256[](userVaultCount);
+    userBalances = new uint256[](userVaultCount);
+    
+    uint256 resultIndex = 0;
+    for (uint256 i = 0; i < allVaultIds.length; i++) {
+        uint256 vaultId = allVaultIds[i];
+        uint256 balance = userVaultShares[vaultId][_user];
+        
+        if (balance > 0) {
+            userVaultIds[resultIndex] = vaultId;
+            userBalances[resultIndex] = balance;
+            resultIndex++;
+        }
+    }
+    
+    return (userVaultIds, userBalances);
+}
+
+/// @notice Get the chain selectors where this user has vault balances
+/// @param _user The user address to query
+/// @return activeChains Array of chain selectors where this user has activity
+function getUserActiveChains(address _user) external view returns (uint64[] memory activeChains) {
+    // This is a simplified implementation that requires iterating over all vaults
+    // A more efficient implementation would maintain a mapping of user -> chains
+    
+    // First, find all unique chains where the user has balances
+    uint64[] memory tempChains = new uint64[](allVaultIds.length); // Max possible size
+    uint256 uniqueChainCount = 0;
+    
+    for (uint256 i = 0; i < allVaultIds.length; i++) {
+        uint256 vaultId = allVaultIds[i];
+        if (userVaultShares[vaultId][_user] > 0) {
+            uint64 chainSelector = vaultChains[vaultId];
+            
+            // Check if we've already added this chain
+            bool found = false;
+            for (uint256 j = 0; j < uniqueChainCount; j++) {
+                if (tempChains[j] == chainSelector) {
+                    found = true;
+                    break;
+                }
+            }
+            
+            if (!found) {
+                tempChains[uniqueChainCount] = chainSelector;
+                uniqueChainCount++;
+            }
+        }
+    }
+    
+    // Create the properly sized result array
+    activeChains = new uint64[](uniqueChainCount);
+    for (uint256 i = 0; i < uniqueChainCount; i++) {
+        activeChains[i] = tempChains[i];
+    }
+    
+    return activeChains;
+}
+
+/// @notice Get complete user portfolio across all vaults
+/// @param _user The user address to query
+/// @return vaultIds Array of vault IDs where user has shares
+/// @return chainSelectors The respective chain for each vault
+/// @return balances User's balance in each vault
+/// @return percentages User's percentage ownership of each vault (in basis points, 10000 = 100%)
+function getUserPortfolio(address _user) external view returns (
+    uint256[] memory vaultIds,
+    uint64[] memory chainSelectors,
+    uint256[] memory balances,
+    uint256[] memory percentages
+) {
+    // First pass: count user vaults
+    uint256 userVaultCount = 0;
+    for (uint256 i = 0; i < allVaultIds.length; i++) {
+        if (userVaultShares[allVaultIds[i]][_user] > 0) {
+            userVaultCount++;
+        }
+    }
+    
+    // Initialize return arrays
+    vaultIds = new uint256[](userVaultCount);
+    chainSelectors = new uint64[](userVaultCount);
+    balances = new uint256[](userVaultCount);
+    percentages = new uint256[](userVaultCount);
+    
+    // Second pass: populate data
+    uint256 resultIndex = 0;
+    for (uint256 i = 0; i < allVaultIds.length; i++) {
+        uint256 vaultId = allVaultIds[i];
+        uint256 userShares = userVaultShares[vaultId][_user];
+        
+        if (userShares > 0) {
+            vaultIds[resultIndex] = vaultId;
+            chainSelectors[resultIndex] = vaultChains[vaultId];
+            balances[resultIndex] = userShares;
+            
+            // Only calculate percentage if this is the vault chain
+            if (isVaultChain && vaultChains[vaultId] == thisChain) {
+                (address vaultToken, , , , ) = vault.getVaultDetails(vaultId);
+                uint256 totalSupply = IERC20(vaultToken).totalSupply();
+                
+                if (totalSupply > 0) {
+                    percentages[resultIndex] = (userShares * 10000) / totalSupply;
+                }
+            }
+            
+            resultIndex++;
+        }
+    }
+    
+    return (vaultIds, chainSelectors, balances, percentages);
+}
+
+
+/// @notice Get global vault statistics across all chains
+/// @return totalVaults Total number of registered vaults
+/// @return totalChains Number of chains with registered vaults
+/// @return vaultsPerChain Count of vaults on each chain
+/// @return chainSelectors List of chain selectors with vaults
+function getGlobalVaultStats() external view returns (
+    uint256 totalVaults,
+    uint256 totalChains,
+    uint256[] memory vaultsPerChain,
+    uint64[] memory chainSelectors
+) {
+    // Count unique chains with vaults
+    uint64[] memory uniqueChains = new uint64[](allVaultIds.length); // Max possible size
+    uint256 uniqueChainCount = 0;
+    
+    // Find all unique chains with vaults
+    for (uint256 i = 0; i < allVaultIds.length; i++) {
+        uint64 chainSelector = vaultChains[allVaultIds[i]];
+        
+        bool found = false;
+        for (uint256 j = 0; j < uniqueChainCount; j++) {
+            if (uniqueChains[j] == chainSelector) {
+                found = true;
+                break;
+            }
+        }
+        
+        if (!found && chainSelector != 0) {
+            uniqueChains[uniqueChainCount] = chainSelector;
+            uniqueChainCount++;
+        }
+    }
+    
+    // Create properly sized result arrays
+    chainSelectors = new uint64[](uniqueChainCount);
+    vaultsPerChain = new uint256[](uniqueChainCount);
+    
+    // Copy unique chains and count vaults per chain
+    for (uint256 i = 0; i < uniqueChainCount; i++) {
+        chainSelectors[i] = uniqueChains[i];
+        vaultsPerChain[i] = chainVaults[uniqueChains[i]].length;
+    }
+    
+    return (
+        allVaultIds.length,
+        uniqueChainCount,
+        vaultsPerChain,
+        chainSelectors
+    );
+}
 }

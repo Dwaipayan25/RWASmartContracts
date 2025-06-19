@@ -44,11 +44,11 @@ contract DeployScript is Script {
         console.log("==========================");
         
         // Save addresses to file for verification
-        string memory addresses = string(abi.encodePacked(
-            "RWAVault=", vm.toString(address(vault)), "\n",
-            "RWAToken1=", vm.toString(address(rwa1)), "\n",
-            "RWAToken2=", vm.toString(address(rwa2)), "\n",
-            "RWAToken3=", vm.toString(address(rwa3)), "\n"
-        ));
+        // string memory addresses = string(abi.encodePacked(
+        //     "RWAVault=", vm.toString(address(vault)), "\n",
+        //     "RWAToken1=", vm.toString(address(rwa1)), "\n",
+        //     "RWAToken2=", vm.toString(address(rwa2)), "\n",
+        //     "RWAToken3=", vm.toString(address(rwa3)), "\n"
+        // ));
     }
 }

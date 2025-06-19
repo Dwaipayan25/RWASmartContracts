@@ -1,0 +1,211 @@
+RWAXTFSmartContracts git:(main) ✗ forge script script/DeployRWAXTF.s.sol:DeployRWAXTF --rpc-url https://sepolia.base.org --broadcast --etherscan-api-key J9BV7NCJZ7G21VS2P5CMT2TPXWKVQWWGZ5 --verify -vvv
+[⠊] Compiling...
+No files changed, compilation skipped
+Script ran successfully.
+
+== Logs ==
+  Deploying to chain ID: 84532
+  Deploying to Base Sepolia as vault chain
+  BaseToken (USDC) deployed at: 0x323e8652276b2AE7BB4C5950FB3AaFC8cdfCE4A6
+  RWA Token 1 (RET) deployed at: 0x2B39a32652249FA43Ac5aA6956e243CC5224585E
+  RWA Token 2 (CCT) deployed at: 0x1399839334Ae646cD66f67C2474A3Db3379Ba993
+  RWA Vault deployed at: 0xEFd673d18fEFEDCec5af9D6842cEb8375f34aDC7
+  Cross Chain Manager deployed at: 0xE1377d82b2D82a6898cf1e8CD2A6a1203fb5dE8d
+  Setting up mock price feeds for testing
+  Sample vault created with ID: 0
+  Cross Chain Manager pre-funded with RWA tokens
+  Vault registered with Cross Chain Manager
+  Deployment completed. Save these addresses for testing!
+
+## Setting up 1 EVM.
+
+==========================
+
+Chain 84532
+
+Estimated gas price: 0.000985144 gwei
+
+Estimated total gas used for script: 12227334
+
+Estimated amount required: 0.000012045684726096 ETH
+
+==========================
+
+##### base-sepolia
+✅  [Success] Hash: 0x39f341794aebadc523d804122d333180c75446da1f6c5e48718df6a8685b0fdc
+Contract Address: 0x323e8652276b2AE7BB4C5950FB3AaFC8cdfCE4A6
+Block: 27275726
+Paid: 0.000000545190068544 ETH (553452 gas * 0.000985072 gwei)
+
+
+##### base-sepolia
+✅  [Success] Hash: 0x26306b491a226112ad8de711978fc1a8eb02e7480ff900112330a980ef2af92d
+Contract Address: 0xEFd673d18fEFEDCec5af9D6842cEb8375f34aDC7
+Block: 27275727
+Paid: 0.000002542437339552 ETH (2580966 gas * 0.000985072 gwei)
+
+
+##### base-sepolia
+✅  [Success] Hash: 0x7eeef3b3e59145d1f2d1fa1593f4339adfec394c4a2a7d9698496ac74854cb14
+Block: 27275727
+Paid: 0.000000118562280848 ETH (120359 gas * 0.000985072 gwei)
+
+
+##### base-sepolia
+✅  [Success] Hash: 0x81b689cd267423fee1a25c60fb149291d1dea984e67e41c8afef7faae79e8810
+Contract Address: 0x1399839334Ae646cD66f67C2474A3Db3379Ba993
+Block: 27275727
+Paid: 0.000000545308277184 ETH (553572 gas * 0.000985072 gwei)
+
+
+##### base-sepolia
+✅  [Success] Hash: 0x77306c5af3e38600a0702270f0344bc68aa40387732a5499847676f74fb0e98c
+Block: 27275727
+Paid: 0.00000005022389592 ETH (50985 gas * 0.000985072 gwei)
+
+
+##### base-sepolia
+✅  [Success] Hash: 0x5fea9a389ad02dde73daed7041102a3b2341c4d41eda4091533d02f6be027573
+Block: 27275727
+Paid: 0.000000050247537648 ETH (51009 gas * 0.000985072 gwei)
+
+
+##### base-sepolia
+✅  [Success] Hash: 0xfa5bd4415f39bff3bd38713d8deb9ad2ca588b8a031801904065ba6813fc5a84
+Contract Address: 0x2B39a32652249FA43Ac5aA6956e243CC5224585E
+Block: 27275727
+Paid: 0.000000545284635456 ETH (553548 gas * 0.000985072 gwei)
+
+
+##### base-sepolia
+✅  [Success] Hash: 0xee4a83e9fd5e5aceb9188fb8c377ea0cba4c38f5729854bee9242229c3f0e10f
+Contract Address: 0xE1377d82b2D82a6898cf1e8CD2A6a1203fb5dE8d
+Block: 27275727
+Paid: 0.000003910257095008 ETH (3969514 gas * 0.000985072 gwei)
+
+
+##### base-sepolia
+✅  [Success] Hash: 0x9643c7729776ef66d20d4781882e4f81b65990f8d6647ebf3aed040390cd79a2
+Block: 27275727
+Paid: 0.00000083356300104 ETH (846195 gas * 0.000985072 gwei)
+
+✅ Sequence #1 on base-sepolia | Total Paid: 0.0000091410741312 ETH (9279600 gas * avg 0.000985072 gwei)
+                                                                                                                     
+
+==========================
+
+ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.
+##
+Start verification for (6) contracts
+Start verifying contract `0x323e8652276b2AE7BB4C5950FB3AaFC8cdfCE4A6` deployed on base-sepolia
+Compiler version: 0.8.28
+Optimizations:    200
+Constructor args: 000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000855534420436f696e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000045553444300000000000000000000000000000000000000000000000000000000
+
+Submitting verification for [src/RWAToken.sol:RWAToken] 0x323e8652276b2AE7BB4C5950FB3AaFC8cdfCE4A6.
+Submitted contract for verification:
+        Response: `OK`
+        GUID: `qmgghxructyawamfwg12uis7pcjizis5mu1vjyaisrdpv8yee3`
+        URL: https://sepolia.basescan.org/address/0x323e8652276b2ae7bb4c5950fb3aafc8cdfce4a6
+Contract verification status:
+Response: `NOTOK`
+Details: `Pending in queue`
+Warning: Verification is still pending...; waiting 15 seconds before trying again (7 tries remaining)
+Contract verification status:
+Response: `OK`
+Details: `Pass - Verified`
+Contract successfully verified
+Start verifying contract `0x2B39a32652249FA43Ac5aA6956e243CC5224585E` deployed on base-sepolia
+Compiler version: 0.8.28
+Optimizations:    200
+Constructor args: 000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000115265616c2045737461746520546f6b656e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000035245540000000000000000000000000000000000000000000000000000000000
+
+Submitting verification for [src/RWAToken.sol:RWAToken] 0x2B39a32652249FA43Ac5aA6956e243CC5224585E.
+Submitted contract for verification:
+        Response: `OK`
+        GUID: `842prxu9r6myvusun3ahwx6iaug4ch4v5vbp3yuucag5vuv9ws`
+        URL: https://sepolia.basescan.org/address/0x2b39a32652249fa43ac5aa6956e243cc5224585e
+Contract verification status:
+Response: `NOTOK`
+Details: `Pending in queue`
+Warning: Verification is still pending...; waiting 15 seconds before trying again (7 tries remaining)
+Contract verification status:
+Response: `NOTOK`
+Details: `Already Verified`
+Contract source code already verified
+Start verifying contract `0x1399839334Ae646cD66f67C2474A3Db3379Ba993` deployed on base-sepolia
+Compiler version: 0.8.28
+Optimizations:    200
+Constructor args: 000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000013436172626f6e2043726564697420546f6b656e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000034343540000000000000000000000000000000000000000000000000000000000
+
+Submitting verification for [src/RWAToken.sol:RWAToken] 0x1399839334Ae646cD66f67C2474A3Db3379Ba993.
+Submitted contract for verification:
+        Response: `OK`
+        GUID: `kwew6bxiexrrwa2huqt4rga6glg2pgyy7lnzr8rqrjixdkex3d`
+        URL: https://sepolia.basescan.org/address/0x1399839334ae646cd66f67c2474a3db3379ba993
+Contract verification status:
+Response: `NOTOK`
+Details: `Pending in queue`
+Warning: Verification is still pending...; waiting 15 seconds before trying again (7 tries remaining)
+Contract verification status:
+Response: `NOTOK`
+Details: `Already Verified`
+Contract source code already verified
+Start verifying contract `0xEFd673d18fEFEDCec5af9D6842cEb8375f34aDC7` deployed on base-sepolia
+Compiler version: 0.8.28
+Optimizations:    200
+
+Submitting verification for [src/RWAVault.sol:RWAVault] 0xEFd673d18fEFEDCec5af9D6842cEb8375f34aDC7.
+Submitted contract for verification:
+        Response: `OK`
+        GUID: `s6fs15vygkuvkzyijbntskzue7x4uvyjzlfthfkheir6vwzkyj`
+        URL: https://sepolia.basescan.org/address/0xefd673d18fefedcec5af9d6842ceb8375f34adc7
+Contract verification status:
+Response: `NOTOK`
+Details: `Pending in queue`
+Warning: Verification is still pending...; waiting 15 seconds before trying again (7 tries remaining)
+Contract verification status:
+Response: `OK`
+Details: `Pass - Verified`
+Contract successfully verified
+Start verifying contract `0xE1377d82b2D82a6898cf1e8CD2A6a1203fb5dE8d` deployed on base-sepolia
+Compiler version: 0.8.28
+Optimizations:    200
+Constructor args: 000000000000000000000000d3b06cebf099ce7da4accf578aaebfdbd6e88a93000000000000000000000000efd673d18fefedcec5af9d6842ceb8375f34adc70000000000000000000000000000000000000000000000008f90b8876dee65380000000000000000000000000000000000000000000000000000000000000001
+
+Submitting verification for [src/CrossChainVaultManager.sol:SimplifiedCrossChainManager] 0xE1377d82b2D82a6898cf1e8CD2A6a1203fb5dE8d.
+Submitted contract for verification:
+        Response: `OK`
+        GUID: `23jac66meu7s5mnbwzi52urvp8uuya7dv9tw1qa9mw2rbldwij`
+        URL: https://sepolia.basescan.org/address/0xe1377d82b2d82a6898cf1e8cd2a6a1203fb5de8d
+Contract verification status:
+Response: `NOTOK`
+Details: `Pending in queue`
+Warning: Verification is still pending...; waiting 15 seconds before trying again (7 tries remaining)
+Contract verification status:
+Response: `OK`
+Details: `Pass - Verified`
+Contract successfully verified
+Start verifying contract `0xc408cc587Cc235e15D77645D860883DFBBBf36aE` deployed on base-sepolia
+Compiler version: 0.8.28
+Optimizations:    200
+Constructor args: 00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000001944697665727369666965642052574120506f7274666f6c696f0000000000000000000000000000000000000000000000000000000000000000000000000000044452574100000000000000000000000000000000000000000000000000000000
+
+Submitting verification for [src/VaultToken.sol:VaultToken] 0xc408cc587Cc235e15D77645D860883DFBBBf36aE.
+Submitted contract for verification:
+        Response: `OK`
+        GUID: `yssuhydel4ccp4mtmwtibyy9hytak3uzcecgm3rmsmdxybgx4h`
+        URL: https://sepolia.basescan.org/address/0xc408cc587cc235e15d77645d860883dfbbbf36ae
+Contract verification status:
+Response: `NOTOK`
+Details: `Pending in queue`
+Warning: Verification is still pending...; waiting 15 seconds before trying again (7 tries remaining)
+Contract verification status:
+Response: `OK`
+Details: `Pass - Verified`
+Contract successfully verified
+All (6) contracts were verified!
+
+Transactions saved to: /Users/dwaipayandehury/Desktop/WEB3/RWA-backed-XTF/RWAXTFSmartContracts/broadcast/DeployRWAXTF.s.sol/84532/run-latest.json
+
+Sensitive values saved to: /Users/dwaipayandehury/Desktop/WEB3/RWA-backed-XTF/RWAXTFSmartContracts/cache/DeployRWAXTF.s.sol/84532/run-latest.json

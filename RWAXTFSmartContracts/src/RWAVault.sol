@@ -342,7 +342,7 @@ function getAllVaultsWithMetadata() external view returns (
 }
 
 // Internal helper function to calculate vault TVL
-function _calculateVaultTVL(uint256 vaultId) internal view returns (uint256) {
+function _calculateVaultTVL(uint256 vaultId) public view returns (uint256) {
     VaultConfig storage vault = vaults[vaultId];
     uint256 tvl = vaultBalances[vaultId][vault.baseCurrency];
     

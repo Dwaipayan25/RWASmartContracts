@@ -1,0 +1,143 @@
+RWAXTFSmartContracts git:(main) ✗ forge script script/DeployRWAXTF.s.sol:DeployRWAXTF --rpc-url https://ethereum-sepolia.publicnode.com --broadcast --etherscan-api-key E7FKMZC6UQ7H4BBDTZDJHKPP66I4KBA377 --verify -vvv
+[⠊] Compiling...
+No files changed, compilation skipped
+Script ran successfully.
+
+== Logs ==
+  Deploying to chain ID: 11155111
+  Deploying to Ethereum Sepolia as supporting chain
+  BaseToken (USDC) deployed at: 0x563fC0c37Beb9F6a85c440AdE98d5eA1272f8a5f
+  RWA Token 1 (RET) deployed at: 0x0431fdFc240e1A5aC369a020C34702b56A86d8a4
+  RWA Token 2 (CCT) deployed at: 0x7DA03FD4f1aC626505B51563c87190bf74Ee8674
+  Cross Chain Manager deployed at: 0x45a075a518BB43f16985dE91a2CDcf0B697Bb4Cc
+  Deployment completed. Save these addresses for testing!
+
+## Setting up 1 EVM.
+
+==========================
+
+Chain 11155111
+
+Estimated gas price: 0.001004114 gwei
+
+Estimated total gas used for script: 7292912
+
+Estimated amount required: 0.000007322915039968 ETH
+
+==========================
+
+##### sepolia
+✅  [Success] Hash: 0xda0c356bde093ba6a93b893a2caa18ad031a32e5f309df54105aecbc924ab34f
+Contract Address: 0x563fC0c37Beb9F6a85c440AdE98d5eA1272f8a5f
+Block: 8581502
+Paid: 0.000000554530124496 ETH (553452 gas * 0.001001948 gwei)
+
+
+##### sepolia
+✅  [Success] Hash: 0x2242474311d71f3bbb9a271a0ae232a38d77dc5630536fbff8097627489f6b12
+Contract Address: 0x7DA03FD4f1aC626505B51563c87190bf74Ee8674
+Block: 8581502
+Paid: 0.000000554650358256 ETH (553572 gas * 0.001001948 gwei)
+
+
+##### sepolia
+✅  [Success] Hash: 0x2337c372c920366c84c5f6e5d402a003e819252d6c4ec459bf01f837a269e9e5
+Contract Address: 0x0431fdFc240e1A5aC369a020C34702b56A86d8a4
+Block: 8581502
+Paid: 0.000000554626311504 ETH (553548 gas * 0.001001948 gwei)
+
+
+##### sepolia
+✅  [Success] Hash: 0x4c496b7a072089e5633f53362ab9eab7454faef91ebc5cc62cbade2fa2286728
+Contract Address: 0x45a075a518BB43f16985dE91a2CDcf0B697Bb4Cc
+Block: 8581502
+Paid: 0.000003957055357176 ETH (3949362 gas * 0.001001948 gwei)
+
+✅ Sequence #1 on sepolia | Total Paid: 0.000005620862151432 ETH (5609934 gas * avg 0.001001948 gwei)
+                                                                                                                                                                    
+
+==========================
+
+ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.
+##
+Start verification for (4) contracts
+Start verifying contract `0x563fC0c37Beb9F6a85c440AdE98d5eA1272f8a5f` deployed on sepolia
+Compiler version: 0.8.28
+Optimizations:    200
+Constructor args: 000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000855534420436f696e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000045553444300000000000000000000000000000000000000000000000000000000
+
+Submitting verification for [src/RWAToken.sol:RWAToken] 0x563fC0c37Beb9F6a85c440AdE98d5eA1272f8a5f.
+Warning: Etherscan could not detect the deployment.; waiting 5 seconds before trying again (4 tries remaining)
+
+Submitting verification for [src/RWAToken.sol:RWAToken] 0x563fC0c37Beb9F6a85c440AdE98d5eA1272f8a5f.
+Submitted contract for verification:
+        Response: `OK`
+        GUID: `t2jyiau5jvfck9hmxyyyn1i2pl8sq1qii3n61n81dycczttcve`
+        URL: https://sepolia.etherscan.io/address/0x563fc0c37beb9f6a85c440ade98d5ea1272f8a5f
+Contract verification status:
+Response: `NOTOK`
+Details: `Pending in queue`
+Warning: Verification is still pending...; waiting 15 seconds before trying again (7 tries remaining)
+Contract verification status:
+Response: `OK`
+Details: `Pass - Verified`
+Contract successfully verified
+Start verifying contract `0x0431fdFc240e1A5aC369a020C34702b56A86d8a4` deployed on sepolia
+Compiler version: 0.8.28
+Optimizations:    200
+Constructor args: 000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000115265616c2045737461746520546f6b656e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000035245540000000000000000000000000000000000000000000000000000000000
+
+Submitting verification for [src/RWAToken.sol:RWAToken] 0x0431fdFc240e1A5aC369a020C34702b56A86d8a4.
+Submitted contract for verification:
+        Response: `OK`
+        GUID: `i5fdpsjiax22ej6nthkbkjrxkgng2wtwwbhke6fwnhebzciuxd`
+        URL: https://sepolia.etherscan.io/address/0x0431fdfc240e1a5ac369a020c34702b56a86d8a4
+Contract verification status:
+Response: `NOTOK`
+Details: `Pending in queue`
+Warning: Verification is still pending...; waiting 15 seconds before trying again (7 tries remaining)
+Contract verification status:
+Response: `NOTOK`
+Details: `Already Verified`
+Contract source code already verified
+Start verifying contract `0x7DA03FD4f1aC626505B51563c87190bf74Ee8674` deployed on sepolia
+Compiler version: 0.8.28
+Optimizations:    200
+Constructor args: 000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000013436172626f6e2043726564697420546f6b656e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000034343540000000000000000000000000000000000000000000000000000000000
+
+Submitting verification for [src/RWAToken.sol:RWAToken] 0x7DA03FD4f1aC626505B51563c87190bf74Ee8674.
+Submitted contract for verification:
+        Response: `OK`
+        GUID: `zbrjjze8t843hd4653skindqn36eyyxk9qnh5csihvdytkbr7u`
+        URL: https://sepolia.etherscan.io/address/0x7da03fd4f1ac626505b51563c87190bf74ee8674
+Contract verification status:
+Response: `NOTOK`
+Details: `Pending in queue`
+Warning: Verification is still pending...; waiting 15 seconds before trying again (7 tries remaining)
+Contract verification status:
+Response: `NOTOK`
+Details: `Already Verified`
+Contract source code already verified
+Start verifying contract `0x45a075a518BB43f16985dE91a2CDcf0B697Bb4Cc` deployed on sepolia
+Compiler version: 0.8.28
+Optimizations:    200
+Constructor args: 0000000000000000000000000bf3de8c5d3e8a2b34d2beeb17abfcebaf363a590000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000de41ba4fc9d91ad90000000000000000000000000000000000000000000000000000000000000000
+
+Submitting verification for [src/CrossChainVaultManager.sol:SimplifiedCrossChainManager] 0x45a075a518BB43f16985dE91a2CDcf0B697Bb4Cc.
+Submitted contract for verification:
+        Response: `OK`
+        GUID: `7f3mulxtwgtrbuaiuirm2sa94da6xutg8dshimwcjcgcrguina`
+        URL: https://sepolia.etherscan.io/address/0x45a075a518bb43f16985de91a2cdcf0b697bb4cc
+Contract verification status:
+Response: `NOTOK`
+Details: `Pending in queue`
+Warning: Verification is still pending...; waiting 15 seconds before trying again (7 tries remaining)
+Contract verification status:
+Response: `OK`
+Details: `Pass - Verified`
+Contract successfully verified
+All (4) contracts were verified!
+
+Transactions saved to: /Users/dwaipayandehury/Desktop/WEB3/RWA-backed-XTF/RWAXTFSmartContracts/broadcast/DeployRWAXTF.s.sol/11155111/run-latest.json
+
+Sensitive values saved to: /Users/dwaipayandehury/Desktop/WEB3/RWA-backed-XTF/RWAXTFSmartContracts/cache/DeployRWAXTF.s.sol/11155111/run-latest.json

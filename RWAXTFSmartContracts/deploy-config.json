@@ -1,0 +1,14 @@
+{
+  "sepolia": {
+    "rpc_url": "https://rpc.sepolia.org",
+    "ccip_router": "0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59",
+    "chain_selector": "16015286601757825753",
+    "is_vault_chain": false
+  },
+  "base-sepolia": {
+    "rpc_url": "https://sepolia.base.org",
+    "ccip_router": "0xD3b06cEbF099CE7DA4AcCf578aaebFDBd6e88a93",
+    "chain_selector": "10344971235874465080",
+    "is_vault_chain": true
+  }
+}
